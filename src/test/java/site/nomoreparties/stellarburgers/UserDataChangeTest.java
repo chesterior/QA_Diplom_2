@@ -2,22 +2,35 @@ package site.nomoreparties.stellarburgers;
 
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import site.nomoreparties.stellarburgers.api.client.OrderUserClient;
+import site.nomoreparties.stellarburgers.api.client.UserClient;
+import site.nomoreparties.stellarburgers.api.model.User;
+import site.nomoreparties.stellarburgers.api.util.UserGenerator;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 
 public class UserDataChangeTest {
+    private User user;
+    private UserClient userClient;
+    private User userNewData;
+
+    @Before
+    public void setUp() {
+        userClient = new UserClient();
+        user = UserGenerator.getRandom();
+        userNewData = UserGenerator.getRandom();
+    }
+
     @Test
     @DisplayName("Изменения данных пользователя")
     public void userUpdateData() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
-        User userNewData = UserGenerator.getRandom();
-
         Response createResponse = userClient.create(user);
-
         String userToken = createResponse.path("accessToken");
+        user.setAccessToken(userToken);
 
         Response updateResponse = userClient.userUpdateData(userToken, userNewData);
 
@@ -38,18 +51,14 @@ public class UserDataChangeTest {
                 .log().all()
                 .assertThat()
                 .statusCode(200);
-
-        userClient.delete(userToken);
     }
 
     @Test
     @DisplayName("Изменения данных пользователя без авторизации")
     public void userUpdateDataWithoutAuthorization() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
-        User userNewData = UserGenerator.getRandom();
-
         Response createResponse = userClient.create(user);
+        String userToken = createResponse.path("accessToken");
+        user.setAccessToken(userToken);
 
         Response updateResponse = userClient.userUpdateData(null, userNewData);
 
@@ -60,8 +69,20 @@ public class UserDataChangeTest {
                 .statusCode(401)
                 .body("success", equalTo(false))
                 .body("message", equalTo("You should be authorised"));
+    }
 
-        String userToken = createResponse.path("accessToken");
-        userClient.delete(userToken);
+    @After
+    @DisplayName("Удаление пользователя")
+    public void deleteUser() {
+        userClient = new UserClient();
+        String userToken = user.getAccessToken();
+
+        if (userToken != null) {
+            Response deleteResponse = userClient.delete(userToken);
+            deleteResponse
+                    .then()
+                    .assertThat()
+                    .statusCode(202);
+        }
     }
 }

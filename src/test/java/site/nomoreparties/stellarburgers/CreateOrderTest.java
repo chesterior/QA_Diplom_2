@@ -2,21 +2,37 @@ package site.nomoreparties.stellarburgers;
 
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import site.nomoreparties.stellarburgers.api.client.CreateOrderClient;
+import site.nomoreparties.stellarburgers.api.client.IngredientsClient;
+import site.nomoreparties.stellarburgers.api.client.UserClient;
+import site.nomoreparties.stellarburgers.api.model.CreateOrder;
+import site.nomoreparties.stellarburgers.api.model.User;
+import site.nomoreparties.stellarburgers.api.util.UserGenerator;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.equalTo;
 
 public class CreateOrderTest {
+    private User user;
+    private UserClient userClient;
+
+    @Before
+    public void setUp() {
+        userClient = new UserClient();
+        user = UserGenerator.getRandom();
+    }
     @Test
     @DisplayName("Создание заказа с авторизацией")
     public void createOrderWithAuthorization() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
+
         Response createResponse = userClient.create(user);
 
         String userToken = createResponse.path("accessToken");
+        user.setAccessToken(userToken);
 
         CreateOrderClient createOrderClient = new CreateOrderClient();
         IngredientsClient ingredientsClient = new IngredientsClient();
@@ -45,8 +61,6 @@ public class CreateOrderTest {
                 .body("order.updatedAt", is(notNullValue()))
                 .body("order.number", is(notNullValue()))
                 .body("order.price", is(notNullValue()));
-
-        userClient.delete(userToken);
     }
 
     @Test
@@ -111,5 +125,19 @@ public class CreateOrderTest {
                 .log().all()
                 .assertThat()
                 .statusCode(500);
+    }
+    @After
+    @DisplayName("Удаление пользователя")
+    public void deleteUser() {
+        userClient = new UserClient();
+        String userToken = user.getAccessToken();
+
+        if (userToken != null) {
+            Response deleteResponse = userClient.delete(userToken);
+            deleteResponse
+                    .then()
+                    .assertThat()
+                    .statusCode(202);
+        }
     }
 }

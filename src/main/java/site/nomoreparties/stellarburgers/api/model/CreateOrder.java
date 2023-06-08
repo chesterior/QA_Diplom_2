@@ -1,4 +1,4 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.model;
 
 public class CreateOrder {
     private String[] ingredients;

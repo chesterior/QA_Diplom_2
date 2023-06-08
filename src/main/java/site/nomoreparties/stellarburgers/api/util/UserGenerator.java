@@ -1,6 +1,7 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.util;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import site.nomoreparties.stellarburgers.api.model.User;
 
 import java.util.Random;
 

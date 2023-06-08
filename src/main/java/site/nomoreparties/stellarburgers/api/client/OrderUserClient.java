@@ -1,4 +1,4 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.client;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
@@ -10,8 +10,7 @@ public class OrderUserClient extends BaseClient {
     private static final String ORDER_USER_PATH = "/api/orders";
     @Step("Получение заказов конкретного пользователя")
     public Response getOrderUser(String tokenUser) {
-        RequestSpecification requestSpec = getRequestSpec(tokenUser)
-                .log().all();
+        RequestSpecification requestSpec = getRequestSpec(tokenUser);
         return requestSpec
                 .when()
                 .get(ORDER_USER_PATH);

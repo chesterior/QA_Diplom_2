@@ -1,8 +1,9 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.client;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import site.nomoreparties.stellarburgers.api.model.User;
 
 import static io.restassured.RestAssured.given;
 

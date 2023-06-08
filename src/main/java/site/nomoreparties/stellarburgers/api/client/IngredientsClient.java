@@ -1,4 +1,4 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.client;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;

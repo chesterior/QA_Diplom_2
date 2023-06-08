@@ -2,7 +2,12 @@ package site.nomoreparties.stellarburgers;
 
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import site.nomoreparties.stellarburgers.api.client.UserClient;
+import site.nomoreparties.stellarburgers.api.model.User;
+import site.nomoreparties.stellarburgers.api.util.UserGenerator;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -10,14 +15,21 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 
 public class UserCreateTest {
+    private User user;
+    private UserClient userClient;
+
+    @Before
+    public void setUp() {
+        userClient = new UserClient();
+        user = UserGenerator.getRandom();
+    }
 
     @Test
     @DisplayName("Успешное создание пользователя")
     public void userCanBeCreated() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
-
         Response createResponse = userClient.create(user);
+        String userToken = createResponse.path("accessToken");
+        user.setAccessToken(userToken);
 
         createResponse
                 .then()
@@ -29,23 +41,14 @@ public class UserCreateTest {
                 .body("user.name", equalToIgnoringCase(user.getName()))
                 .body("accessToken", is(notNullValue()))
                 .body("refreshToken", is(notNullValue()));
-
-        String userToken = createResponse.path("accessToken");
-        Response deleteResponse = userClient.delete(userToken);
-        deleteResponse
-                .then()
-                .log().all()
-                .assertThat()
-                .statusCode(202);
     }
 
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован")
     public void userCreateWhoCreated() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
-
         Response createResponse = userClient.create(user);
+        String userToken = createResponse.path("accessToken");
+        user.setAccessToken(userToken);
 
         createResponse
                 .then()
@@ -68,17 +71,11 @@ public class UserCreateTest {
                 .statusCode(403)
                 .body("success", equalTo(false))
                 .body("message", equalTo("User already exists"));
-
-
-        String userToken = createResponse.path("accessToken");
-        userClient.delete(userToken);
     }
 
     @Test
     @DisplayName("Попытка создать пользователя без указания обязательного поля name")
     public void userCreateWithoutRequiredNameField() {
-        UserClient userClient = new UserClient();
-        User user = UserGenerator.getRandom();
         User userWithoutName = new User(user.getEmail(), user.getPassword());
 
         Response createResponse = userClient.create(userWithoutName);
@@ -90,5 +87,20 @@ public class UserCreateTest {
                 .statusCode(403)
                 .body("success", equalTo(false))
                 .body("message", equalTo("Email, password and name are required fields"));
+    }
+
+    @After
+    @DisplayName("Удаление пользователя")
+    public void deleteUser() {
+        UserClient userClient = new UserClient();
+        String userToken = user.getAccessToken();
+
+        if (userToken != null) {
+            Response deleteResponse = userClient.delete(userToken);
+            deleteResponse
+                    .then()
+                    .assertThat()
+                    .statusCode(202);
+        }
     }
 }

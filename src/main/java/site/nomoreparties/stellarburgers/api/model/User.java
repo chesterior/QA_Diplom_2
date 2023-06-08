@@ -1,9 +1,10 @@
-package site.nomoreparties.stellarburgers;
+package site.nomoreparties.stellarburgers.api.model;
 
 public class User {
     private String email;
     private String password;
     private String name;
+    private String accessToken;
 
     public User(String email, String password, String name) {
         this.email = email;
@@ -26,5 +27,12 @@ public class User {
 
     public String getName() {
         return name;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }
